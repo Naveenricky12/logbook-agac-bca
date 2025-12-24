@@ -74,8 +74,6 @@ def get_active_log_by_student(db: Session, student_id: str):
         models.LogEntry.check_out_time == None
     ).first()
 
-def checkout_log(db: Session, log_id: int, issues_reported: str = None):
-    db_log = db.query(models.LogEntry).filter(models.LogEntry.id == log_id).first()
     if db_log:
         db_log.check_out_time = models.get_ist_time()
         if issues_reported:
@@ -83,3 +81,21 @@ def checkout_log(db: Session, log_id: int, issues_reported: str = None):
         db.commit()
         db.refresh(db_log)
     return db_log
+
+def delete_all_logs(db: Session):
+    try:
+        num_deleted = db.query(models.LogEntry).delete()
+        db.commit()
+        return num_deleted
+    except Exception as e:
+        db.rollback()
+        raise e
+
+def delete_logs_by_ids(db: Session, log_ids: list[int]):
+    try:
+        num_deleted = db.query(models.LogEntry).filter(models.LogEntry.id.in_(log_ids)).delete(synchronize_session=False)
+        db.commit()
+        return num_deleted
+    except Exception as e:
+        db.rollback()
+        raise e

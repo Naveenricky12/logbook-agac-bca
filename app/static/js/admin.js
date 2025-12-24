@@ -31,6 +31,9 @@ function showSection(section) {
     if (section === 'students') {
         // Default to 1st Year if no current year is set
         loadStudentYear('1st Year');
+    } else if (section === 'logs') {
+        // Reload logs to ensure fresh data
+        loadDashboard();
     }
 }
 
@@ -185,6 +188,7 @@ function renderLogs(logs) {
     logs.forEach(log => {
         const row = document.createElement('tr');
         row.innerHTML = `
+            <td style="text-align: center;"><input type="checkbox" class="log-checkbox" value="${log.id}"></td>
             <td>${log.id}</td>
             <td>${log.year || '-'}</td>
             <td>${log.student_name}</td>
@@ -197,6 +201,53 @@ function renderLogs(logs) {
         `;
         tbody.appendChild(row);
     });
+
+    // Re-bind Select All listener
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.onclick = function () {
+            const checkboxes = document.querySelectorAll('.log-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        };
+    }
+}
+
+async function deleteSelectedLogs() {
+    if (!isAuthenticated()) return;
+
+    // Get selected IDs
+    const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+    const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+    if (ids.length === 0) {
+        alert("Please select at least one log to delete.");
+        return;
+    }
+
+    if (!confirm(`Delete ${ids.length} selected logs?`)) return;
+
+    try {
+        const response = await fetch(API_BASE + '/logs/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getAuthHeader()
+            },
+            body: JSON.stringify(ids)
+        });
+
+        if (response.ok) {
+            const res = await response.json();
+            showAlert(res.message, 'success');
+            loadDashboard(); // Refresh
+        } else {
+            showAlert('Failed to delete logs', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('Network error', 'error');
+    }
 }
 
 function filterLogs() {
@@ -212,8 +263,8 @@ function filterLogs() {
             if (logDate !== dateQuery) return false;
         }
 
-        // Purpose Filter
-        if (purposeQuery && log.purpose !== purposeQuery) return false;
+        // Purpose Filter (Text Search)
+        if (purposeQuery && !log.purpose.toLowerCase().includes(purposeQuery.toLowerCase())) return false;
 
         // Student ID Filter
         if (studentIdQuery && !log.student_id.toLowerCase().includes(studentIdQuery)) return false;
@@ -341,51 +392,172 @@ function renderStudents(students) {
 
     students.forEach(student => {
         const row = document.createElement('tr');
-        // Escape strings to prevent XSS/breaking JS
-        const safeName = student ? student.name.replace(/'/g, "\\'") : '';
-        const safeYear = student ? student.year.replace(/'/g, "\\'") : '';
 
-        row.innerHTML = `
-            <td>${student.register_number}</td>
-            <td>${student.name}</td>
-            <td>${student.year}</td>
-            <td>
-                <button onclick="editStudent(${student.id}, '${safeName}', '${safeYear}')" class="secondary" style="padding: 5px 10px; font-size: 12px;">Edit</button>
-            </td>
-        `;
+        // Register Number
+        const tdReg = document.createElement('td');
+        tdReg.textContent = student.register_number;
+        row.appendChild(tdReg);
+
+        // Name
+        const tdName = document.createElement('td');
+        tdName.id = `name-${student.id}`;
+        tdName.textContent = student.name;
+        row.appendChild(tdName);
+
+        // Year
+        const tdYear = document.createElement('td');
+        tdYear.id = `year-${student.id}`;
+        tdYear.textContent = student.year;
+        row.appendChild(tdYear);
+
+        // Actions
+        const tdActions = document.createElement('td');
+
+        // Edit Button
+        const btnEdit = document.createElement('button');
+        btnEdit.id = `btn-edit-${student.id}`;
+        btnEdit.className = 'secondary';
+        btnEdit.textContent = 'Edit';
+        btnEdit.style.cssText = "padding: 5px 10px; font-size: 12px; margin-right: 5px;";
+        // Direct assignment avoids escaping issues
+        btnEdit.onclick = function () {
+            toggleEdit(student.id, student.name, student.year);
+        };
+        tdActions.appendChild(btnEdit);
+
+        // Delete Button
+        const btnDel = document.createElement('button');
+        btnDel.id = `btn-del-${student.id}`;
+        btnDel.className = 'danger';
+        btnDel.textContent = 'Delete';
+        btnDel.style.cssText = "padding: 5px 10px; font-size: 12px;";
+        btnDel.onclick = function () {
+            deleteStudent(student.id, student.name);
+        };
+        tdActions.appendChild(btnDel);
+
+        row.appendChild(tdActions);
         tbody.appendChild(row);
     });
 }
 
-async function editStudent(id, currentName, currentYear) {
-    const newName = prompt("Edit Name:", currentName);
-    if (newName === null) return; // Cancelled
+function toggleEdit(id, originalName, originalYear) {
+    console.log('toggleEdit called for ID:', id);
+    const nameCell = document.getElementById(`name-${id}`);
+    const yearCell = document.getElementById(`year-${id}`);
+    const btnEdit = document.getElementById(`btn-edit-${id}`);
+    const btnDel = document.getElementById(`btn-del-${id}`);
 
-    // Slight bug: prompts for year after name, but if year edit is desired? 
-    // Simplified flow: Prompt for both.
-    const newYear = prompt("Edit Year:", currentYear);
-    if (newYear === null) return; // Cancelled
+    // Robust check: Is there an input field already?
+    const isEditing = document.getElementById(`input-name-${id}`);
 
-    if (newName && newYear) {
-        try {
-            const response = await fetch(`/api/students/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': getAuthHeader()
-                },
-                body: JSON.stringify({ name: newName, year: newYear })
-            });
+    if (!isEditing) {
+        // Switch to Edit Mode (current state is view)
+        const currentName = nameCell.textContent;
+        const currentYear = yearCell.textContent;
 
-            if (response.ok) {
-                showAlert('Student updated', 'success');
-                loadStudents();
-            } else {
-                showAlert('Failed to update', 'error');
-            }
-        } catch (error) {
-            showAlert('Network error', 'error');
+        nameCell.innerHTML = `<input type="text" id="input-name-${id}" value="${currentName}" style="width: 100%; padding: 5px;">`;
+        yearCell.innerHTML = `<input type="text" id="input-year-${id}" value="${currentYear}" style="width: 100%; padding: 5px;">`;
+
+        btnEdit.textContent = 'Save'; // content, not innerText
+        btnEdit.classList.remove('secondary');
+        btnEdit.classList.add('success');
+
+        // Change Delete to Cancel
+        btnDel.textContent = 'Cancel';
+        btnDel.classList.remove('danger');
+        btnDel.classList.add('secondary');
+
+        btnDel.onclick = function () {
+            cancelEdit(id, originalName, originalYear);
+        };
+    } else {
+        // Save Mode (already in edit)
+        saveStudent(id);
+    }
+}
+
+function cancelEdit(id, originalName, originalYear) {
+    // Revert UI
+    const nameCell = document.getElementById(`name-${id}`);
+    const yearCell = document.getElementById(`year-${id}`);
+    const btnEdit = document.getElementById(`btn-edit-${id}`);
+    const btnDel = document.getElementById(`btn-del-${id}`);
+
+    nameCell.textContent = originalName;
+    yearCell.textContent = originalYear;
+
+    btnEdit.textContent = 'Edit';
+    btnEdit.classList.remove('success');
+    btnEdit.classList.add('secondary');
+
+    btnDel.textContent = 'Delete';
+    btnDel.classList.remove('secondary');
+    btnDel.classList.add('danger');
+
+    // Restore Delete handler
+    // Note: We need to match the original signature from renderStudents
+    // Since we can't easily reference the original safeName from here without passing it around,
+    // we'll rely on the passed in originalName (which is the raw string)
+    // and rely on the closure or just rebuild the function.
+
+    btnDel.onclick = function () {
+        deleteStudent(id, originalName);
+    };
+}
+
+async function saveStudent(id) {
+    const newName = document.getElementById(`input-name-${id}`).value;
+    const newYear = document.getElementById(`input-year-${id}`).value;
+
+    if (!newName || !newYear) {
+        showAlert("Name and Year are required", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/students/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getAuthHeader()
+            },
+            body: JSON.stringify({ name: newName, year: newYear })
+        });
+
+        if (response.ok) {
+            showAlert('Student updated successfully', 'success');
+            // Refresh grid to be safe and clean
+            loadStudents();
+        } else {
+            showAlert('Failed to update student', 'error');
         }
+    } catch (error) {
+        showAlert('Network error', 'error');
+    }
+}
+
+async function deleteStudent(id, name) {
+    if (!isAuthenticated()) return;
+
+    if (!confirm(`Are you sure you want to delete student "${name}"?`)) return;
+
+    try {
+        const response = await fetch(`/api/students/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': getAuthHeader()
+            }
+        });
+
+        if (response.ok) {
+            showAlert('Student deleted successfully', 'success');
+            loadStudents();
+        } else {
+            showAlert('Failed to delete student', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error', 'error');
     }
 }
 
@@ -442,6 +614,34 @@ async function downloadTemplate() {
             a.remove();
         } else {
             showAlert('Failed to download template', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('Network error', 'error');
+    }
+}
+
+async function deleteAllLogs() {
+    if (!isAuthenticated()) return;
+
+    const confirmed = confirm("ARE YOU SURE?\n\nThis will DELETE ALL LOGS from the database.\nThis action cannot be undone.");
+    if (!confirmed) return;
+
+    const doubleConfirmed = confirm("Please confirm again to delete everything.");
+    if (!doubleConfirmed) return;
+
+    try {
+        const response = await fetch(API_BASE + '/logs', {
+            method: 'DELETE',
+            headers: { 'Authorization': getAuthHeader() }
+        });
+
+        if (response.ok) {
+            const res = await response.json();
+            showAlert(res.message, 'success');
+            loadDashboard(); // Refresh
+        } else {
+            showAlert('Failed to delete logs', 'error');
         }
     } catch (error) {
         console.error(error);

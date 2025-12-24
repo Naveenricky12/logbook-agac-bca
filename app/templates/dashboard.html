@@ -18,8 +18,8 @@
         <div class="dashboard-header">
             <h1>Admin Dashboard</h1>
             <div>
-                <button onclick="showSection('logs')" id="btn-logs" class="secondary active">Logs</button>
-                <button onclick="showSection('students')" id="btn-students" class="secondary">Manage Students</button>
+                <button id="btn-logs" class="secondary active">Logs</button>
+                <button id="btn-students" class="secondary">Manage Students</button>
                 <span style="margin: 0 10px; border-left: 1px solid #ccc;"></span>
                 <button onclick="downloadCSV()" class="secondary">Export CSV</button>
                 <button onclick="logout()" class="checkout-btn">Logout</button>
@@ -29,41 +29,35 @@
         <div id="alert" class="alert"></div>
 
         <div id="section-logs">
-            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+            <!-- Filter Section (Aligned Grid) -->
+            <div class="filter-row">
                 <div style="flex: 1;">
-                    <label for="filter_date" style="display: block; margin-bottom: 5px;">Filter by Date</label>
-                    <input type="date" id="filter_date" onchange="filterLogs()" style="width: 100%;">
+                    <label for="filter_date">Filter by Date</label>
+                    <input type="date" id="filter_date" onchange="filterLogs()">
                 </div>
                 <div style="flex: 1;">
-                    <label for="filter_purpose" style="display: block; margin-bottom: 5px;">Filter by
-                        Purpose/Subject</label>
-                    <select id="filter_purpose" onchange="filterLogs()" style="width: 100%;">
-                        <option value="">All Purposes</option>
-                        <option value="Assignment">Assignment</option>
-                        <option value="Research">Research</option>
-                        <option value="Personal Study">Personal Study</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <label for="filter_purpose">Filter by Subject</label>
+                    <input type="text" id="filter_purpose" placeholder="Enter Subject..." onkeyup="filterLogs()">
                 </div>
                 <div style="flex: 1;">
-                    <label for="filter_student_id" style="display: block; margin-bottom: 5px;">Filter by Student
-                        ID</label>
-                    <input type="text" id="filter_student_id" placeholder="Enter Student ID" onkeyup="filterLogs()"
-                        style="width: 100%;">
+                    <label for="filter_student_id">Filter by Student ID</label>
+                    <input type="text" id="filter_student_id" placeholder="Enter ID..." onkeyup="filterLogs()">
                 </div>
                 <div style="flex: 1;">
-                    <label for="filter_general" style="display: block; margin-bottom: 5px;">General Search</label>
-                    <input type="text" id="filter_general" placeholder="Name or Computer..." onkeyup="filterLogs()"
-                        style="width: 100%;">
+                    <label for="filter_general">General Search</label>
+                    <input type="text" id="filter_general" placeholder="Name or Computer..." onkeyup="filterLogs()">
                 </div>
-                <div>
-                    <button onclick="clearFilters()" class="secondary" style="margin-bottom: 1px;">Clear</button>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="clearFilters()" class="secondary">Clear</button>
+                    <button onclick="deleteSelectedLogs()" class="danger">Delete Selected</button>
+                    <button onclick="deleteAllLogs()" class="secondary" style="font-size: 11px;">Delete ALL</button>
                 </div>
             </div>
 
             <table id="logs-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all"></th>
                         <th>ID</th>
                         <th>Name</th>
                         <th>ID No.</th>
@@ -147,7 +141,7 @@
         </div>
     </div>
 
-    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/admin.js?v=2"></script>
     <script>
         // Init dashboard
         document.addEventListener('DOMContentLoaded', loadDashboard);

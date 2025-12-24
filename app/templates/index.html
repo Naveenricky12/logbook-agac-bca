@@ -11,7 +11,7 @@
 <body>
     <div class="container">
         <h1>Alagappa Government Arts College</h1>
-        <h1>Computer Lab Log Book</h1>
+        <h3>Computer Lab Log Book</h3>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="openTab('checkin')">Check In</button>
@@ -28,11 +28,9 @@
                     <input type="text" id="student_id" name="student_id" placeholder="Enter Register No." required
                         pattern="[0-9]+" title="Numbers only" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                         onblur="fetchStudentDetails()">
-                    <!-- Optional explicit button -->
-                    <!-- <button type="button" class="secondary" onclick="fetchStudentDetails()" style="width: auto;">Fetch</button> -->
                 </div>
 
-                <div id="student-details"
+                <div id="student-details" start
                     style="display: none; background: #f0f4f8; padding: 15px; border-radius: 4px; border: 1px solid #dcdcdc;">
                     <p style="margin: 5px 0;"><strong>Name:</strong> <span id="display_name_checkin"></span></p>
                     <p style="margin: 5px 0;"><strong>Year:</strong> <span id="display_year_checkin"></span></p>
@@ -55,9 +53,10 @@
         <div id="checkout" class="tab-content">
             <h2>Student Check-Out</h2>
             <form id="find-active-form">
-                <label for="checkout_student_id">Enter Student ID to Find Session</label>
+                <label for="checkout_student_id">Enter Register Number to Find Session</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="checkout_student_id" required style="flex-grow: 1;">
+                    <input type="text" id="checkout_student_id" required style="flex-grow: 1;"
+                        placeholder="Enter Register No.">
                     <button type="submit" class="secondary" style="width: auto;">Find</button>
                 </div>
             </form>

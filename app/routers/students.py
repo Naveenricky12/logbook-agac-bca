@@ -125,3 +125,14 @@ def update_student(
     if not db_student:
         raise HTTPException(status_code=404, detail="Student not found")
     return db_student
+
+@router.delete("/{student_id}")
+def delete_student(
+    student_id: int, 
+    db: Session = Depends(database.get_db),
+    admin: str = Depends(get_current_admin)
+):
+    db_student = crud.delete_student(db, student_id)
+    if not db_student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return {"message": "Student deleted successfully"}

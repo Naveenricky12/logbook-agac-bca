@@ -35,6 +35,23 @@ def list_logs(
 ):
     return crud.get_logs(db, skip=skip, limit=limit)
 
+@router.delete("/logs")
+def delete_logs(
+    db: Session = Depends(database.get_db),
+    admin: str = Depends(get_current_admin)
+):
+    count = crud.delete_all_logs(db)
+    return {"message": f"Deleted {count} logs"}
+
+@router.post("/logs/delete")
+def delete_selected_logs(
+    log_ids: list[int],
+    db: Session = Depends(database.get_db),
+    admin: str = Depends(get_current_admin)
+):
+    count = crud.delete_logs_by_ids(db, log_ids)
+    return {"message": f"Deleted {count} logs"}
+
 @router.get("/export")
 def export_logs(
     db: Session = Depends(database.get_db),

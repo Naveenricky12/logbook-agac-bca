@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Out - Computer Lab</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Alagappa Government Arts College</h1>
+        <h3>Computer Lab Check-Out</h3>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/" style="text-decoration: none;">
+                <button class="secondary" style="background-color: #555;">&larr; Go to Check In</button>
+            </a>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div id="checkout">
+            <form id="find-active-form">
+                <label for="checkout_student_id">Enter Register Number to Find Session</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="checkout_student_id" required style="flex-grow: 1;"
+                        placeholder="Enter Register No.">
+                    <button type="submit" class="secondary" style="width: auto;">Find</button>
+                </div>
+            </form>
+
+            <div id="active-session-details"
+                style="display: none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <h3>Active Session Found</h3>
+                <p><strong>Name:</strong> <span id="display_name"></span></p>
+                <p><strong>Computer:</strong> <span id="display_computer"></span></p>
+                <p><strong>Check-in Time:</strong> <span id="display_time"></span></p>
+
+                <form id="checkout-confirm-form">
+                    <input type="hidden" id="log_id">
+                    <label for="issues">Report Issues (Optional)</label>
+                    <textarea id="issues" name="issues" placeholder="Hardware/Software problems..."></textarea>
+
+                    <button type="submit" class="checkout-btn">Confirm Check Out</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>
