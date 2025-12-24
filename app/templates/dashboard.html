@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Log Book</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .container {
+            max-width: 1000px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <div>
+                <button onclick="showSection('logs')" id="btn-logs" class="secondary active">Logs</button>
+                <button onclick="showSection('students')" id="btn-students" class="secondary">Manage Students</button>
+                <span style="margin: 0 10px; border-left: 1px solid #ccc;"></span>
+                <button onclick="downloadCSV()" class="secondary">Export CSV</button>
+                <button onclick="logout()" class="checkout-btn">Logout</button>
+            </div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div id="section-logs">
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label for="filter_date" style="display: block; margin-bottom: 5px;">Filter by Date</label>
+                    <input type="date" id="filter_date" onchange="filterLogs()" style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label for="filter_purpose" style="display: block; margin-bottom: 5px;">Filter by
+                        Purpose/Subject</label>
+                    <select id="filter_purpose" onchange="filterLogs()" style="width: 100%;">
+                        <option value="">All Purposes</option>
+                        <option value="Assignment">Assignment</option>
+                        <option value="Research">Research</option>
+                        <option value="Personal Study">Personal Study</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label for="filter_student_id" style="display: block; margin-bottom: 5px;">Filter by Student
+                        ID</label>
+                    <input type="text" id="filter_student_id" placeholder="Enter Student ID" onkeyup="filterLogs()"
+                        style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label for="filter_general" style="display: block; margin-bottom: 5px;">General Search</label>
+                    <input type="text" id="filter_general" placeholder="Name or Computer..." onkeyup="filterLogs()"
+                        style="width: 100%;">
+                </div>
+                <div>
+                    <button onclick="clearFilters()" class="secondary" style="margin-bottom: 1px;">Clear</button>
+                </div>
+            </div>
+
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>ID No.</th>
+                        <th>Year</th>
+                        <th>Computer</th>
+                        <th>Subject</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Issues</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Logs will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="section-students" style="display: none;">
+            <!-- Year Tabs -->
+            <!-- Year Tabs -->
+            <div
+                style="margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <button onclick="loadStudentYear('1st Year')" id="tab-year-1" class="secondary"
+                        style="margin-right: 10px;">1st Year</button>
+                    <button onclick="loadStudentYear('2nd Year')" id="tab-year-2" class="secondary"
+                        style="margin-right: 10px;">2nd Year</button>
+                    <button onclick="loadStudentYear('3rd Year')" id="tab-year-3" class="secondary"
+                        style="margin-right: 10px;">3rd Year</button>
+                    <button onclick="loadStudentYear('All')" id="tab-year-all" class="secondary"
+                        style="margin-right: 10px;">All Students</button>
+                </div>
+                <div>
+                    <button onclick="downloadTemplate()" class="secondary" style="margin-right: 5px;">
+                        Download Template
+                    </button>
+                    <input type="file" id="import-csv-file" accept=".csv" style="display: none;"
+                        onchange="importStudents()">
+                    <button onclick="document.getElementById('import-csv-file').click()" class="secondary"
+                        style="background-color: #e3f2fd; color: #1976d2; border: 1px solid #1976d2;">
+                        Import CSV
+                    </button>
+                </div>
+            </div>
+
+            <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 id="add-student-title">Add New Student</h3>
+                <form id="add-student-form"
+                    style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
+                    <div>
+                        <label for="new_reg_no">Register Number</label>
+                        <input type="text" id="new_reg_no" required pattern="[0-9]+" title="Numbers only"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    </div>
+                    <div>
+                        <label for="new_name">Student Name</label>
+                        <input type="text" id="new_name" required pattern="[A-Za-z\s\.]+"
+                            title="Letters, spaces, and dots only"
+                            oninput="this.value = this.value.replace(/[^A-Za-z\s\.]/g, '')">
+                    </div>
+                    <!-- Hidden Year Input (Auto-set by tab) -->
+                    <input type="hidden" id="new_year">
+
+                    <button type="submit">Add Student</button>
+                </form>
+            </div>
+
+            <table id="students-table">
+                <thead>
+                    <tr>
+                        <th>Register No.</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Students will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script>
+        // Init dashboard
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+
+</html>

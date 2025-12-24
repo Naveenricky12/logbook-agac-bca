@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Lab Log Book</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Alagappa Government Arts College</h1>
+        <h1>Computer Lab Log Book</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('checkin')">Check In</button>
+            <button class="tab-btn" onclick="openTab('checkout')">Check Out</button>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div id="checkin" class="tab-content active">
+            <h2>Student Check-In</h2>
+            <form id="checkin-form">
+                <label for="student_id">Register Number</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="student_id" name="student_id" placeholder="Enter Register No." required
+                        pattern="[0-9]+" title="Numbers only" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        onblur="fetchStudentDetails()">
+                    <!-- Optional explicit button -->
+                    <!-- <button type="button" class="secondary" onclick="fetchStudentDetails()" style="width: auto;">Fetch</button> -->
+                </div>
+
+                <div id="student-details"
+                    style="display: none; background: #f0f4f8; padding: 15px; border-radius: 4px; border: 1px solid #dcdcdc;">
+                    <p style="margin: 5px 0;"><strong>Name:</strong> <span id="display_name_checkin"></span></p>
+                    <p style="margin: 5px 0;"><strong>Year:</strong> <span id="display_year_checkin"></span></p>
+                </div>
+
+                <label for="computer_number">Computer Number</label>
+                <input type="text" id="computer_number" name="computer_number" placeholder="e.g., PC-05" required
+                    pattern="[A-Za-z0-9\-]+" title="Alphanumeric and hyphens only (e.g., PC-01)"
+                    oninput="this.value = this.value.replace(/[^A-Za-z0-9\-]/g, '')">
+
+                <label for="purpose">Subject</label>
+                <input type="text" id="purpose" name="purpose" placeholder="e.g., Data Structures" required
+                    pattern="[A-Za-z0-9\s\-\.]+" title="Letters, numbers, spaces, and hyphens only"
+                    oninput="this.value = this.value.replace(/[^A-Za-z0-9\s\-\.]/g, '')">
+
+                <button type="submit" id="checkin-submit-btn" disabled>Check In</button>
+            </form>
+        </div>
+
+        <div id="checkout" class="tab-content">
+            <h2>Student Check-Out</h2>
+            <form id="find-active-form">
+                <label for="checkout_student_id">Enter Student ID to Find Session</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="checkout_student_id" required style="flex-grow: 1;">
+                    <button type="submit" class="secondary" style="width: auto;">Find</button>
+                </div>
+            </form>
+
+            <div id="active-session-details"
+                style="display: none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <h3>Active Session Found</h3>
+                <p><strong>Name:</strong> <span id="display_name"></span></p>
+                <p><strong>Computer:</strong> <span id="display_computer"></span></p>
+                <p><strong>Check-in Time:</strong> <span id="display_time"></span></p>
+
+                <form id="checkout-confirm-form">
+                    <input type="hidden" id="log_id">
+                    <label for="issues">Report Issues (Optional)</label>
+                    <textarea id="issues" name="issues" placeholder="Hardware/Software problems..."></textarea>
+
+                    <button type="submit" class="checkout-btn">Confirm Check Out</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="/login" style="color: #999; text-decoration: none; font-size: 12px;">Admin Login</a>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>
