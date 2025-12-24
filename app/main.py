@@ -6,11 +6,20 @@ from .routers import logs, admin, students
 
 models.Base.metadata.create_all(bind=database.engine)
 
+import os
+
+# ... imports ...
+
 app = FastAPI(title="Library Log Book")
 
-app.mount("/static", StaticFiles(directory="c:/LOGBOOK/app/static"), name="static")
+# Get absolute path to the 'app' directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-templates = Jinja2Templates(directory="c:/LOGBOOK/app/templates")
+# Mount static files correctly
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+# Mount templates correctly
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 app.include_router(logs.router)
 app.include_router(admin.router)
