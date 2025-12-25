@@ -74,6 +74,8 @@ def get_active_log_by_student(db: Session, student_id: str):
         models.LogEntry.check_out_time == None
     ).first()
 
+def checkout_log(db: Session, log_id: int, issues_reported: str = None):
+    db_log = get_log_by_id(db, log_id)
     if db_log:
         db_log.check_out_time = models.get_ist_time()
         if issues_reported:
