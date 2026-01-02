@@ -71,8 +71,16 @@ def get_log_by_id(db: Session, log_id: int):
 def get_active_log_by_student(db: Session, student_id: str):
     return db.query(models.LogEntry).filter(
         models.LogEntry.student_id == student_id,
+    return db.query(models.LogEntry).filter(
+        models.LogEntry.student_id == student_id,
         models.LogEntry.check_out_time == None
     ).first()
+
+def get_student_logs(db: Session, student_id: str):
+    return db.query(models.LogEntry).filter(
+        models.LogEntry.student_id == student_id,
+        models.LogEntry.check_out_time != None
+    ).all()
 
 def checkout_log(db: Session, log_id: int, issues_reported: str = None):
     db_log = get_log_by_id(db, log_id)

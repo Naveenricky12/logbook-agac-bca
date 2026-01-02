@@ -436,6 +436,16 @@ function renderStudents(students) {
         };
         tdActions.appendChild(btnDel);
 
+        // Stats Button (Total Hours)
+        const btnStats = document.createElement('button');
+        btnStats.className = 'secondary';
+        btnStats.textContent = 'Stats';
+        btnStats.style.cssText = "padding: 5px 10px; font-size: 12px; margin-left: 5px; background-color: #1976d2; color: white;";
+        btnStats.onclick = function () {
+            viewStudentStats(student.register_number, student.name);
+        };
+        tdActions.appendChild(btnStats);
+
         row.appendChild(tdActions);
         tbody.appendChild(row);
     });
@@ -646,5 +656,60 @@ async function deleteAllLogs() {
     } catch (error) {
         console.error(error);
         showAlert('Network error', 'error');
+    }
+}
+
+async function viewStudentStats(regNo, name) {
+    const modal = document.getElementById('stats-modal');
+    const content = document.getElementById('stats-content');
+
+    if (!modal || !content) return;
+
+    modal.style.display = 'block';
+    content.innerHTML = `<p>Loading stats for <strong>${name}</strong>...</p>`;
+
+    try {
+        const response = await fetch(`/api/students/${regNo}/stats`, {
+            headers: { 'Authorization': getAuthHeader() }
+        });
+
+        if (response.ok) {
+            const stats = await response.json();
+
+            let html = `<p><strong>Student:</strong> ${name} (${stats.register_number})</p>`;
+            html += `<p style="font-size: 18px; color: #2e7d32;"><strong>Total Hours: ${stats.total_hours}</strong></p>`;
+            html += `<hr>`;
+            html += `<table class="stats-table"><thead><tr><th>Subject</th><th>Hours</th></tr></thead><tbody>`;
+
+            const subjects = Object.keys(stats.subject_breakdown);
+            if (subjects.length > 0) {
+                subjects.forEach(sub => {
+                    html += `<tr><td>${sub}</td><td>${stats.subject_breakdown[sub]}</td></tr>`;
+                });
+            } else {
+                html += `<tr><td colspan="2" style="text-align:center; color:#777;">No usage history found.</td></tr>`;
+            }
+
+            html += `</tbody></table>`;
+
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = `<p style="color:red;">Failed to load statistics.</p>`;
+        }
+    } catch (error) {
+        console.error(error);
+        content.innerHTML = `<p style="color:red;">Network error.</p>`;
+    }
+}
+
+function closeStatsModal() {
+    const modal = document.getElementById('stats-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+window.onclick = function (event) {
+    const modal = document.getElementById('stats-modal');
+    if (event.target == modal) {
+        modal.style.display = "none";
     }
 }

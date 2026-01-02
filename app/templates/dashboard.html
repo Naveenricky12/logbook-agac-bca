@@ -141,7 +141,16 @@
         </div>
     </div>
 
-    <script src="/static/js/admin.js?v=2"></script>
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span onclick="closeStatsModal()" class="close">&times;</span>
+            <h2>Attendance Statistics</h2>
+            <div id="stats-content">Loading...</div>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js?v=3"></script>
     <script>
         // Init dashboard
         document.addEventListener('DOMContentLoaded', loadDashboard);

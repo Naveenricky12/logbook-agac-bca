@@ -136,3 +136,34 @@ def delete_student(
     if not db_student:
         raise HTTPException(status_code=404, detail="Student not found")
     return {"message": "Student deleted successfully"}
+
+@router.get("/{register_number}/stats")
+def get_student_stats(
+    register_number: str, 
+    db: Session = Depends(database.get_db),
+    admin: str = Depends(get_current_admin)
+):
+    logs = crud.get_student_logs(db, register_number)
+    
+    total_seconds = 0
+    subject_stats = {}
+    
+    for log in logs:
+        if log.check_in_time and log.check_out_time:
+            duration = (log.check_out_time - log.check_in_time).total_seconds()
+            total_seconds += duration
+            
+            subject = log.purpose or "Unknown"
+            if subject not in subject_stats:
+                subject_stats[subject] = 0
+            subject_stats[subject] += duration
+            
+    # Convert seconds to hours (rounded to 2 decimal places)
+    total_hours = round(total_seconds / 3600, 2)
+    subject_hours = {sub: round(sec / 3600, 2) for sub, sec in subject_stats.items()}
+    
+    return {
+        "register_number": register_number,
+        "total_hours": total_hours,
+        "subject_breakdown": subject_hours
+    }
