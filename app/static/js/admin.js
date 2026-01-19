@@ -321,6 +321,11 @@ let currentStudentYear = '1st Year';
 async function loadStudentYear(year) {
     currentStudentYear = year;
 
+    // Update Global Dropdown
+    if (typeof updateGlobalSubjectDropdown === 'function') {
+        updateGlobalSubjectDropdown(year);
+    }
+
     // Update Tab UI
     ['1st Year', '2nd Year', '3rd Year', 'All'].forEach(y => {
         const id = 'tab-year-' + (y === 'All' ? 'all' : y[0]);
@@ -424,6 +429,16 @@ function renderStudents(students) {
             toggleEdit(student.id, student.name, student.year);
         };
         tdActions.appendChild(btnEdit);
+
+        // Check In Button (New)
+        const btnCheckIn = document.createElement('button');
+        btnCheckIn.className = 'success';
+        btnCheckIn.textContent = 'Check In';
+        btnCheckIn.style.cssText = "padding: 5px 10px; font-size: 12px; margin-right: 5px;";
+        btnCheckIn.onclick = function () {
+            openCheckInModal(student.register_number, student.name, student.year);
+        };
+        tdActions.appendChild(btnCheckIn);
 
         // Delete Button
         const btnDel = document.createElement('button');
@@ -711,5 +726,117 @@ window.onclick = function (event) {
     const modal = document.getElementById('stats-modal');
     if (event.target == modal) {
         modal.style.display = "none";
+    }
+}
+
+// Manual Check-In Modal Functions
+const SUBJECTS_BY_YEAR = {
+    '1st Year': ['Python', 'C Language', 'Microprocessor', 'C++'],
+    '2nd Year': ['Operation Research', 'Markup and Scripting Language'],
+    '3rd Year': ['R language', 'HTML']
+};
+
+function openCheckInModal(regNo, name, year) {
+    const modal = document.getElementById('checkin-modal');
+    if (!modal) return;
+
+    document.getElementById('checkin-title').textContent = `Check In: ${name} (${year})`;
+    document.getElementById('manual-reg-no').value = regNo;
+    document.getElementById('manual-computer').value = '';
+
+    // Populate Subject Dropdown
+    const select = document.getElementById('manual-purpose');
+    select.innerHTML = '<option value="">-- Select Subject --</option>'; // Reset
+
+    // Handle year matching
+    let subjects = [];
+    if (year && SUBJECTS_BY_YEAR[year]) {
+        subjects = SUBJECTS_BY_YEAR[year];
+    } else {
+        // Try loose matching
+        if (year && (year.includes('1st') || year.includes('I '))) subjects = SUBJECTS_BY_YEAR['1st Year'];
+        else if (year && (year.includes('2nd') || year.includes('II '))) subjects = SUBJECTS_BY_YEAR['2nd Year'];
+        else if (year && (year.includes('3rd') || year.includes('III '))) subjects = SUBJECTS_BY_YEAR['3rd Year'];
+    }
+
+    if (subjects.length > 0) {
+        subjects.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub;
+            opt.textContent = sub;
+            select.appendChild(opt);
+        });
+    } else {
+        // Fallback
+        const opt = document.createElement('option');
+        opt.value = "Lab Work";
+        opt.textContent = "Lab Work";
+        select.appendChild(opt);
+    }
+
+    // Auto-select last used subject for this specific year
+    const sanitizedYear = year ? year.replace(/\s/g, '') : 'default';
+    const lastUsedKey = `last_subject_${sanitizedYear}`;
+    const lastUsed = localStorage.getItem(lastUsedKey);
+
+    if (lastUsed) {
+        select.value = lastUsed;
+    }
+
+    // Save selection on change
+    select.onchange = function () {
+        if (this.value) {
+            localStorage.setItem(lastUsedKey, this.value);
+        }
+    };
+
+    modal.style.display = 'block';
+    setTimeout(() => document.getElementById('manual-computer').focus(), 100);
+}
+
+function closeCheckInModal() {
+    const modal = document.getElementById('checkin-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitManualCheckIn() {
+    const regNo = document.getElementById('manual-reg-no').value;
+    const computer = document.getElementById('manual-computer').value;
+    const purpose = document.getElementById('manual-purpose').value;
+
+    if (!regNo || !computer || !purpose) {
+        showAlert('All fields are required', 'error');
+        return;
+    }
+
+    const data = {
+        student_id: regNo,
+        computer_number: computer,
+        purpose: purpose
+    };
+
+    try {
+        const response = await fetch('/api/logs/checkin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Admin check-in is effectively the same as kiosk check-in, but we can reuse the same endpoint.
+                // It doesn't strictly need auth header if endpoint is open, but adding it doesn't hurt.
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            showAlert('Student checked in successfully', 'success');
+            closeCheckInModal();
+            // Refresh logs if we were on the logs page? Use loadDashboard logic? 
+            // Currently we are in Students tab. It's fine.
+        } else {
+            const err = await response.json();
+            showAlert(err.detail || 'Check-in failed', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showAlert('Network error', 'error');
     }
 }

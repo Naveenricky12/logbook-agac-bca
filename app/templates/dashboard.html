@@ -150,7 +150,30 @@
         </div>
     </div>
 
-    <script src="/static/js/admin.js?v=3"></script>
+    <!-- Manual Check-In Modal -->
+    <div id="checkin-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <span onclick="closeCheckInModal()" class="close">&times;</span>
+            <h2 id="checkin-title">Manual Check-In</h2>
+            <form id="manual-checkin-form" onsubmit="event.preventDefault(); submitManualCheckIn();">
+                <input type="hidden" id="manual-reg-no">
+                <div style="margin-bottom: 15px;">
+                    <label for="manual-computer">Computer Number</label>
+                    <input type="text" id="manual-computer" required placeholder="e.g., PC-05">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="manual-purpose">Subject / Purpose</label>
+                    <select id="manual-purpose" required
+                        style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">-- Select Subject --</option>
+                    </select>
+                </div>
+                <button type="submit" class="success" style="width: 100%;">Confirm Check In</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/admin.js?v=13"></script>
     <script>
         // Init dashboard
         document.addEventListener('DOMContentLoaded', loadDashboard);
